@@ -17,8 +17,6 @@ void ofApp::setup(){
     kinect.open(deviceList[0].serial);
     gui.add(kinect.params);
     
-    gui.loadFromFile("settings.xml");
-    
     // GUIを作成
     // トラッキングする円の座標
     gui.add(circleResolution.setup("circle resolution", 100, 10, MAX_COLOR_HEIGHT/2));
@@ -97,7 +95,7 @@ void ofApp::update(){
         // 重心データをOSCで送信(oscSendFrameCounterフレームカウンター毎に)
         if (trackRectCenters.size() > 0 && ofGetFrameNum() % oscSendFrameCounter == 0) {
             for (int i = 0; i < trackRectCenters.size(); i++) {
-                // circlePointX, circlePointY を使って座標変換した方がよさげ
+                // circlePointX, circlePointY を使って座標変換した方がよさげ(受信側で
                 // 重心座標(x, y)と、矩形の輪郭点のカメラからの距離平均(z=大体の高さ)を送信
                 
                 // 距離を特定(存在しない事はありえない)
@@ -118,7 +116,7 @@ void ofApp::update(){
                 std::cout << "OSC Send Mesage" << trackRectCenters[i].x << ":" << trackRectCenters[i].y << ":" << z << std::endl;
                 
                 // データ送信
-                // oscSender.sendMessage(message);
+                oscSender.sendMessage(message);
             }
         }
     }
