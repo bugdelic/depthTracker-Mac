@@ -5,11 +5,24 @@
 #include "ofxGui.h"
 #include "ofxOpenCv.h"
 #include "ofxOsc.h"
+#include "ofxOscBundle.h"
 
 
-#define SERVER_PORT       8888
-#define SERVER_IP_ADDR    "192.168.179.3"
-#define OSC_ADDRESS          "/kinect/track"
+#define SERVER_PORT          8888
+#define SERVER_IP_ADDR       "192.168.179.3"
+
+#define CORAL_START_ADDRESS  "/coral/start"
+#define CORAL_END_ADDRESS    "/coral/end"
+#define CORAL_X_ADDRESS      "/coral/x"
+#define CORAL_Z_ADDRESS      "/coral/z"
+#define CORAL_GO_ADDRESS     "/coral/option"
+
+#define MAYBE_START_ADDRESS "/maybe/start"
+#define MAYBE_END_ADDRESS   "/maybe/end"
+#define MAYBE_X_ADDRESS     "/maybe/x"
+#define MAYBE_Y_ADDRESS     "/maybe/y"
+#define MAYBE_GO_ADDRESS    "/maybe/option"
+
 #define MAX_CV_TRACK_RECT    100
 
 #define MAX_COLOR_WIDTH     1920

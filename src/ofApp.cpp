@@ -93,11 +93,10 @@ void ofApp::update(){
             for (int j = 0; j < MAX_DEPTH_HEIGHT; j++) {
                 int idx = j * depthImage.getWidth() + i;
 
-                /*
-                if (!isInColorCircle(i, j)) {
-                    dataDepth[idx] = 0;
-                }
-                 */
+                // こっちは再帰性反射材無しの場合(GUIで分けても良かったかも...)
+                // if (!isInColorCircle(i, j)) {
+                //    dataDepth[idx] = 0;
+                // }
 
                 // 再帰性反射材用のコード部分に差し替え
                 if (!isInColorCircle(i, j)) {
@@ -155,123 +154,164 @@ void ofApp::update(){
     
         // 重心データをOSCで送信(oscSendFrameCounterフレームカウンター毎に)
         if (trackRectCenters.size() > 0 && ofGetFrameNum() % oscSendFrameCounter == 0) {
-            for (int i = 0; i < trackRectCenters.size(); i++) {
-                // circlePointX, circlePointY を使って座標変換した方がよさげ(受信側で
-                // 重心座標(x, y)と、矩形の輪郭点のカメラからの距離平均(z=大体の高さ)を送信
-                
-                // 距離を特定(存在しない事はありえない)
-                int idx = trackRectCenters[i].y * depthImage.getWidth() + trackRectCenters[i].x;
-                unsigned char *dataDepth = depthImage.getPixels().getData();
-                int z = 0;
-                if (isValidDepthRange(idx))
-                    z = dataDepth[idx];
 
-                // OSCで送信(x,yについては円の中心, circlePointX, circlePointYを使って平行移動)
-                ofxOscMessage message;
-                message.setAddress(OSC_ADDRESS);
-                message.addIntArg(trackRectCenters[i].x - circlePointX);
-                message.addIntArg(trackRectCenters[i].y - circlePointY);
-                if (z >= 0)    message.addIntArg(z);
-                
-                
+            // coral送信用のバンドル
+            ofxOscBundle oscCoralBundle;
+            
+            // maybe送信用のバンドル
+            ofxOscBundle oscMaybeBundle;
+
+            // Coral開始アドレス
+            ofxOscMessage messageCoralStart;
+            messageCoralStart.setAddress(CORAL_START_ADDRESS);
+            oscCoralBundle.addMessage(messageCoralStart);
+
+            // Maybe開始アドレス
+            ofxOscMessage messageMaybeStart;
+            messageMaybeStart.setAddress(MAYBE_START_ADDRESS);
+            oscMaybeBundle.addMessage(messageMaybeStart);
+
+            for (int i = 0; i < trackRectCenters.size(); i++) {
                 if(isCorel){
-                    
                     // 送信ログ
-                    std::cout << "OSC Send Corel" << trackRectCenters[i].x << ":" << trackRectCenters[i].y << ":" << z << std::endl;
+                    std::cout << "OSC Send Corel:" << i << ":" << trackRectCenters[i].x << ":" << trackRectCenters[i].y  << std::endl;
+
+                    // OSCでCoral送信用のBundle用意(x,yについては円の中心, circlePointX, circlePointYを使って平行移動)
+                    ofxOscMessage messageCoralX;
+                    messageCoralX.setAddress(CORAL_X_ADDRESS);
+                    messageCoralX.addIntArg(trackRectCenters[i].x - circlePointX);
+                    oscCoralBundle.addMessage(messageCoralX);
                     
-                    // データ送信
-                    oscSender.sendMessage(message);
+                    ofxOscMessage messageCoralZ;
+                    messageCoralZ.setAddress(CORAL_Z_ADDRESS);
+                    messageCoralZ.addIntArg(trackRectCenters[i].y - circlePointY);
+                    oscCoralBundle.addMessage(messageCoralZ);
+                    
+                    // Go Address
+                    ofxOscMessage messageCoralGo;
+                    messageCoralGo.setAddress(CORAL_GO_ADDRESS);
+                    messageCoralGo.addIntArg(i);
+                    oscCoralBundle.addMessage(messageCoralGo);
+                    
                     //GUI描画
                     if(jjj>i){
-                        
-                    switch(i){
-                        case 0:
-                            coralValue1.setup("corel_1", "x:"+ofToString(trackRectCenters[i].x - circlePointX)+" y:"+ofToString(trackRectCenters[i].y - circlePointY));
-                            break;
-                        case 1:
-                            coralValue2.setup("corel_2", "x:"+ofToString(trackRectCenters[i].x - circlePointX)+" y:"+ofToString(trackRectCenters[i].y - circlePointY));
-                            break;
-                        case 2:
-                            coralValue3.setup("corel_3", "x:"+ofToString(trackRectCenters[i].x - circlePointX)+" y:"+ofToString(trackRectCenters[i].y - circlePointY));
-                            break;
-                        case 3:
-                            coralValue4.setup("corel_4", "x:"+ofToString(trackRectCenters[i].x - circlePointX)+" y:"+ofToString(trackRectCenters[i].y - circlePointY));
-                            break;
-                        case 4:
-                            coralValue5.setup("corel_5", "x:"+ofToString(trackRectCenters[i].x - circlePointX)+" y:"+ofToString(trackRectCenters[i].y - circlePointY));
-                            break;
-                        case 5:
-                            coralValue6.setup("corel_6", "x:"+ofToString(trackRectCenters[i].x - circlePointX)+" y:"+ofToString(trackRectCenters[i].y - circlePointY));
-                            break;
-                        case 6:
-                            coralValue7.setup("corel_7", "x:"+ofToString(trackRectCenters[i].x - circlePointX)+" y:"+ofToString(trackRectCenters[i].y - circlePointY));
-                            break;
-                        case 7:
-                            coralValue8.setup("corel_8", "x:"+ofToString(trackRectCenters[i].x - circlePointX)+" y:"+ofToString(trackRectCenters[i].y - circlePointY));
-                            break;
-                        case 8:
-                            coralValue9.setup("corel_9", "x:"+ofToString(trackRectCenters[i].x - circlePointX)+" y:"+ofToString(trackRectCenters[i].y - circlePointY));
-                            break;
-                        case 9:
-                            coralValue10.setup("corel_10", "x:"+ofToString(trackRectCenters[i].x - circlePointX)+" y:"+ofToString(trackRectCenters[i].y - circlePointY));
-                            break;
-                        case 10:
-                            coralValue11.setup("corel_11", "x:"+ofToString(trackRectCenters[i].x - circlePointX)+" y:"+ofToString(trackRectCenters[i].y - circlePointY));
-                            break;
-                        case 11:
-                            coralValue12.setup("corel_12", "x:"+ofToString(trackRectCenters[i].x - circlePointX)+" y:"+ofToString(trackRectCenters[i].y - circlePointY));
-                            break;
-                        case 12:
-                            coralValue13.setup("corel_13", "x:"+ofToString(trackRectCenters[i].x - circlePointX)+" y:"+ofToString(trackRectCenters[i].y - circlePointY));
-                            break;
-                        case 13:
-                            coralValue14.setup("corel_14", "x:"+ofToString(trackRectCenters[i].x - circlePointX)+" y:"+ofToString(trackRectCenters[i].y - circlePointY));
-                            break;
-                        case 14:
-                            coralValue15.setup("corel_15", "x:"+ofToString(trackRectCenters[i].x - circlePointX)+" y:"+ofToString(trackRectCenters[i].y - circlePointY));
-                            break;
-                        case 15:
-                            coralValue16.setup("corel_16", "x:"+ofToString(trackRectCenters[i].x - circlePointX)+" y:"+ofToString(trackRectCenters[i].y - circlePointY));
-                            break;
-                        case 16:
-                            coralValue17.setup("corel_17", "x:"+ofToString(trackRectCenters[i].x - circlePointX)+" y:"+ofToString(trackRectCenters[i].y - circlePointY));
-                            break;
-                        case 17:
-                            coralValue18.setup("corel_18", "x:"+ofToString(trackRectCenters[i].x - circlePointX)+" y:"+ofToString(trackRectCenters[i].y - circlePointY));
-                            break;
-                        case 18:
-                            coralValue19.setup("corel_19", "x:"+ofToString(trackRectCenters[i].x - circlePointX)+" y:"+ofToString(trackRectCenters[i].y - circlePointY));
-                            break;
-                        case 19:
-                            coralValue20.setup("corel_20", "x:"+ofToString(trackRectCenters[i].x - circlePointX)+" y:"+ofToString(trackRectCenters[i].y - circlePointY));
-                            break;
-                    }
+                        switch(i){
+                            case 0:
+                                coralValue1.setup("corel_1", "x:"+ofToString(trackRectCenters[i].x - circlePointX)+" y:"+ofToString(trackRectCenters[i].y - circlePointY));
+                                break;
+                            case 1:
+                                coralValue2.setup("corel_2", "x:"+ofToString(trackRectCenters[i].x - circlePointX)+" y:"+ofToString(trackRectCenters[i].y - circlePointY));
+                                break;
+                            case 2:
+                                coralValue3.setup("corel_3", "x:"+ofToString(trackRectCenters[i].x - circlePointX)+" y:"+ofToString(trackRectCenters[i].y - circlePointY));
+                                break;
+                            case 3:
+                                coralValue4.setup("corel_4", "x:"+ofToString(trackRectCenters[i].x - circlePointX)+" y:"+ofToString(trackRectCenters[i].y - circlePointY));
+                                break;
+                            case 4:
+                                coralValue5.setup("corel_5", "x:"+ofToString(trackRectCenters[i].x - circlePointX)+" y:"+ofToString(trackRectCenters[i].y - circlePointY));
+                                break;
+                            case 5:
+                                coralValue6.setup("corel_6", "x:"+ofToString(trackRectCenters[i].x - circlePointX)+" y:"+ofToString(trackRectCenters[i].y - circlePointY));
+                                break;
+                            case 6:
+                                coralValue7.setup("corel_7", "x:"+ofToString(trackRectCenters[i].x - circlePointX)+" y:"+ofToString(trackRectCenters[i].y - circlePointY));
+                                break;
+                            case 7:
+                                coralValue8.setup("corel_8", "x:"+ofToString(trackRectCenters[i].x - circlePointX)+" y:"+ofToString(trackRectCenters[i].y - circlePointY));
+                                break;
+                            case 8:
+                                coralValue9.setup("corel_9", "x:"+ofToString(trackRectCenters[i].x - circlePointX)+" y:"+ofToString(trackRectCenters[i].y - circlePointY));
+                                break;
+                            case 9:
+                                coralValue10.setup("corel_10", "x:"+ofToString(trackRectCenters[i].x - circlePointX)+" y:"+ofToString(trackRectCenters[i].y - circlePointY));
+                                break;
+                            case 10:
+                                coralValue11.setup("corel_11", "x:"+ofToString(trackRectCenters[i].x - circlePointX)+" y:"+ofToString(trackRectCenters[i].y - circlePointY));
+                                break;
+                            case 11:
+                                coralValue12.setup("corel_12", "x:"+ofToString(trackRectCenters[i].x - circlePointX)+" y:"+ofToString(trackRectCenters[i].y - circlePointY));
+                                break;
+                            case 12:
+                                coralValue13.setup("corel_13", "x:"+ofToString(trackRectCenters[i].x - circlePointX)+" y:"+ofToString(trackRectCenters[i].y - circlePointY));
+                                break;
+                            case 13:
+                                coralValue14.setup("corel_14", "x:"+ofToString(trackRectCenters[i].x - circlePointX)+" y:"+ofToString(trackRectCenters[i].y - circlePointY));
+                                break;
+                            case 14:
+                                coralValue15.setup("corel_15", "x:"+ofToString(trackRectCenters[i].x - circlePointX)+" y:"+ofToString(trackRectCenters[i].y - circlePointY));
+                                break;
+                            case 15:
+                                coralValue16.setup("corel_16", "x:"+ofToString(trackRectCenters[i].x - circlePointX)+" y:"+ofToString(trackRectCenters[i].y - circlePointY));
+                                break;
+                            case 16:
+                                coralValue17.setup("corel_17", "x:"+ofToString(trackRectCenters[i].x - circlePointX)+" y:"+ofToString(trackRectCenters[i].y - circlePointY));
+                                break;
+                            case 17:
+                                coralValue18.setup("corel_18", "x:"+ofToString(trackRectCenters[i].x - circlePointX)+" y:"+ofToString(trackRectCenters[i].y - circlePointY));
+                                break;
+                            case 18:
+                                coralValue19.setup("corel_19", "x:"+ofToString(trackRectCenters[i].x - circlePointX)+" y:"+ofToString(trackRectCenters[i].y - circlePointY));
+                                break;
+                            case 19:
+                                coralValue20.setup("corel_20", "x:"+ofToString(trackRectCenters[i].x - circlePointX)+" y:"+ofToString(trackRectCenters[i].y - circlePointY));
+                                break;
+                        }
                     }
                 }else{
                     
                     // 送信ログ
-                    std::cout << "OSC Send Mesage" << trackRectCenters[i].x << ":" << trackRectCenters[i].y << ":" << z << std::endl;
+                    std::cout << "OSC Send Mabe:" << i << trackRectCenters[i].x << ":" << trackRectCenters[i].y << std::endl;
                     
-                    // データ送信
-                    oscSender.sendMessage(message);
+                    // OSCでMaybe送信用のBundle用意
+                    ofxOscMessage messageMaybeX;
+                    messageMaybeX.setAddress(MAYBE_X_ADDRESS);
+                    messageMaybeX.addIntArg(trackRectCenters[i].x - circlePointX);
+                    oscMaybeBundle.addMessage(messageMaybeX);
+                    
+                    ofxOscMessage messageMaybeZ;
+                    messageMaybeZ.setAddress(MAYBE_Y_ADDRESS);
+                    messageMaybeZ.addIntArg(trackRectCenters[i].y - circlePointY);
+                    oscMaybeBundle.addMessage(messageMaybeZ);
+                    
+                    // Go Address
+                    ofxOscMessage messageMaybeGo;
+                    messageMaybeGo.setAddress(MAYBE_GO_ADDRESS);
+                    messageMaybeGo.addIntArg(i);
+                    oscMaybeBundle.addMessage(messageMaybeGo);
                     
                     if(kkk>i){
-                    //GUI描画
-                    switch(i){
-                        case 0:
-                            message1.setup("message_1", "x:"+ofToString(trackRectCenters[i].x - circlePointX)+" y:"+ofToString(trackRectCenters[i].y - circlePointY));
-                            break;
-                        case 1:
-                            message2.setup("message_2", "x:"+ofToString(trackRectCenters[i].x - circlePointX)+" y:"+ofToString(trackRectCenters[i].y - circlePointY));
-                            break;
-                        case 2:
-                            message3.setup("message_3", "x:"+ofToString(trackRectCenters[i].x - circlePointX)+" y:"+ofToString(trackRectCenters[i].y - circlePointY));
-                            break;
+                        //GUI描画
+                        switch(i){
+                            case 0:
+                                message1.setup("message_1", "x:"+ofToString(trackRectCenters[i].x - circlePointX)+" y:"+ofToString(trackRectCenters[i].y - circlePointY));
+                                break;
+                            case 1:
+                                message2.setup("message_2", "x:"+ofToString(trackRectCenters[i].x - circlePointX)+" y:"+ofToString(trackRectCenters[i].y - circlePointY));
+                                break;
+                            case 2:
+                                message3.setup("message_3", "x:"+ofToString(trackRectCenters[i].x - circlePointX)+" y:"+ofToString(trackRectCenters[i].y - circlePointY));
+                                break;
+                        }
                     }
-                    }
-                    
                 }
             }
+            
+            // 終了アドレス
+            ofxOscMessage messageCoralEnd;
+            messageCoralEnd.setAddress(CORAL_END_ADDRESS);
+            oscCoralBundle.addMessage(messageCoralEnd);
+
+            ofxOscMessage messageMaybeEnd;
+            messageMaybeEnd.setAddress(MAYBE_END_ADDRESS);
+            oscMaybeBundle.addMessage(messageMaybeEnd);
+
+            // Bundle単位で送信
+            if (oscCoralBundle.getMessageCount() > 3)
+                oscSender.sendBundle(oscCoralBundle);
+            
+            if (oscMaybeBundle.getMessageCount() > 3)
+                oscSender.sendBundle(oscMaybeBundle);
         }
     }
 }
