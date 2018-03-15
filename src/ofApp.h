@@ -8,7 +8,7 @@
 
 
 #define SERVER_PORT       8888
-#define SERVER_IP_ADDR    "192.168.0.2"
+#define SERVER_IP_ADDR    "192.168.179.3"
 #define OSC_ADDRESS          "/kinect/track"
 #define MAX_CV_TRACK_RECT    100
 
@@ -26,6 +26,8 @@ class ofApp : public ofBaseApp{
 		void setup();
 		void update();
 		void draw();
+    
+        void exit();
 
 		void keyPressed(int key);
 		void keyReleased(int key);
@@ -39,7 +41,10 @@ class ofApp : public ofBaseApp{
         bool isInColorCircle(int x, int y);
         bool isValidDepthRange(int index);
     
+        void ringButtonPressed();
+    
         ofxPanel gui;
+        ofxButton ringButton;
         ofxIntSlider minDepth;
         ofxIntSlider baseDepth;
         ofxIntSlider circleResolution;
@@ -55,4 +60,33 @@ class ofApp : public ofBaseApp{
         ofxKinectV2 kinect;
         ofTexture texDepth;
         ofTexture texRGB;
+    
+        ofxLabel coralCount;
+    
+    ofxLabel coralValue1;
+    ofxLabel coralValue2;
+    ofxLabel coralValue3;
+    ofxLabel coralValue4;
+    ofxLabel coralValue5;
+    ofxLabel coralValue6;
+    ofxLabel coralValue7;
+    ofxLabel coralValue8;
+    ofxLabel coralValue9;
+    ofxLabel coralValue10;
+    ofxLabel coralValue11;
+    ofxLabel coralValue12;
+    ofxLabel coralValue13;
+    ofxLabel coralValue14;
+    ofxLabel coralValue15;
+    ofxLabel coralValue16;
+    ofxLabel coralValue17;
+    ofxLabel coralValue18;
+    ofxLabel coralValue19;
+    ofxLabel coralValue20;
+    
+    ofxLabel message1;
+    ofxLabel message2;
+    ofxLabel message3;
+    
+        ofSoundPlayer ring;
 };
