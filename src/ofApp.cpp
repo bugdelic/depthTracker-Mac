@@ -93,8 +93,20 @@ void ofApp::update(){
             for (int j = 0; j < MAX_DEPTH_HEIGHT; j++) {
                 int idx = j * depthImage.getWidth() + i;
 
+                /*
                 if (!isInColorCircle(i, j)) {
                     dataDepth[idx] = 0;
+                }
+                 */
+
+                // 再帰性反射材用のコード部分に差し替え
+                if (!isInColorCircle(i, j)) {
+                    dataDepth[idx] = 0;
+                } else {
+                    if (dataDepth[idx] > 1)
+                        dataDepth[idx] = 0;
+                    else
+                        dataDepth[idx] = 255;
                 }
             }
         }
