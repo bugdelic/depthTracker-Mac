@@ -21,8 +21,8 @@ void ofApp::setup(){
     // GUIを作成
     // トラッキングする円の座標
     gui.add(circleResolution.setup("circle resolution", 100, 10, MAX_COLOR_HEIGHT/2));
-    gui.add(circlePointX.setup("circle center x", MAX_DEPTH_WIDTH/2, 0, MAX_DEPTH_WIDTH));
-    gui.add(circlePointY.setup("circle center y", MAX_DEPTH_HEIGHT/2, 0, MAX_DEPTH_HEIGHT));
+    gui.add(circlePointX.setup("circle center x", 232, 0, MAX_DEPTH_WIDTH));
+    gui.add(circlePointY.setup("circle center y", 146, 0, MAX_DEPTH_HEIGHT));
 
     // OpenCVで探索する時の感度
     gui.add(detectThreshold.setup("cv threshold", 200, 1, 400));
