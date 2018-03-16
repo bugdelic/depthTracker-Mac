@@ -5,17 +5,16 @@ void ofApp::setup(){
     //Uncomment for verbose info from libfreenect2
     //ofSetLogLevel(OF_LOG_VERBOSE);
     
+    
     ofBackground(30, 30, 30);
     
     //see how many devices we have.
     ofxKinectV2 tmp;
     vector <ofxKinectV2::KinectDeviceInfo> deviceList = tmp.getDeviceList();
     
-    ringButton.addListener(this, &ofApp::ringButtonPressed);
     gui.setup("", "settings.xml", 10, 10);
     
     //Note you don't have to use ofxKinectV2 as a shared pointer, but if you want to have it in a vector ( ie: for multuple ) it needs to be.
-    
     kinect.open(deviceList[0].serial);
     gui.add(kinect.params);
     
@@ -30,7 +29,7 @@ void ofApp::setup(){
     gui.add(cvMinArea.setup("cv min area", 10, 1, 200));
     gui.add(cvMaxArea.setup("cv max area", 2000, 1, 100000));
     gui.add(cvMaxTrackRect.setup("cv max track", 10, 1, MAX_CV_TRACK_RECT));
-    
+
     // OSCでどのくらいのレートで送信するか？の設定
     gui.add(oscSendFrameCounter.setup("osc send frame%counter", 30, 10, 300));
     
@@ -60,7 +59,6 @@ void ofApp::setup(){
     gui.add(message2.setup("message_2", "none"));
     gui.add(message3.setup("message_3", "none"));
 
-    
     // OSC用
     oscSender.setup(SERVER_IP_ADDR, SERVER_PORT);
     
@@ -70,6 +68,10 @@ void ofApp::setup(){
     
     if (!depthImage.isAllocated())
         depthImage.allocate(MAX_COLOR_WIDTH, MAX_COLOR_HEIGHT, OF_IMAGE_GRAYSCALE);
+    
+    detect.initAllocate(1920,1080);
+    detect.setup();
+
 }
 
 //--------------------------------------------------------------
@@ -84,6 +86,15 @@ void ofApp::update(){
         depthImage.setFromPixels(kinect.getDepthPixels() );
         colorImage.setFromPixels(kinect.getRgbPixels());
 
+        detect.setColorPixels(colorImage.getPixels());
+        //detect.circlePointX = circlePointX;
+        //detect.circlePointY = circlePointY;
+        detect.circlePointX = 960;
+        detect.circlePointY = 540;
+        
+        detect.update();
+
+        
         // アクセス用のポインタ
         unsigned char *dataColor = colorImage.getPixels().getData();
         unsigned char *dataDepth = depthImage.getPixels().getData();
@@ -97,7 +108,7 @@ void ofApp::update(){
                 // if (!isInColorCircle(i, j)) {
                 //    dataDepth[idx] = 0;
                 // }
-
+                
                 // 再帰性反射材用のコード部分に差し替え
                 if (!isInColorCircle(i, j)) {
                     dataDepth[idx] = 0;
@@ -151,31 +162,31 @@ void ofApp::update(){
             trackRectCenters.push_back(ofPoint(x, y));
             
         }
-    
+        
         // 重心データをOSCで送信(oscSendFrameCounterフレームカウンター毎に)
         if (trackRectCenters.size() > 0 && ofGetFrameNum() % oscSendFrameCounter == 0) {
-
+            
             // coral送信用のバンドル
             ofxOscBundle oscCoralBundle;
             
             // maybe送信用のバンドル
             ofxOscBundle oscMaybeBundle;
-
+            
             // Coral開始アドレス
             ofxOscMessage messageCoralStart;
             messageCoralStart.setAddress(CORAL_START_ADDRESS);
             oscCoralBundle.addMessage(messageCoralStart);
-
+            
             // Maybe開始アドレス
             ofxOscMessage messageMaybeStart;
             messageMaybeStart.setAddress(MAYBE_START_ADDRESS);
             oscMaybeBundle.addMessage(messageMaybeStart);
-
+            
             for (int i = 0; i < trackRectCenters.size(); i++) {
                 if(isCorel){
                     // 送信ログ
                     std::cout << "OSC Send Corel:" << i << ":" << trackRectCenters[i].x << ":" << trackRectCenters[i].y  << std::endl;
-
+                    
                     // OSCでCoral送信用のBundle用意(x,yについては円の中心, circlePointX, circlePointYを使って平行移動)
                     ofxOscMessage messageCoralX;
                     messageCoralX.setAddress(CORAL_X_ADDRESS);
@@ -301,11 +312,11 @@ void ofApp::update(){
             ofxOscMessage messageCoralEnd;
             messageCoralEnd.setAddress(CORAL_END_ADDRESS);
             oscCoralBundle.addMessage(messageCoralEnd);
-
+            
             ofxOscMessage messageMaybeEnd;
             messageMaybeEnd.setAddress(MAYBE_END_ADDRESS);
             oscMaybeBundle.addMessage(messageMaybeEnd);
-
+            
             // Bundle単位で送信
             if (oscCoralBundle.getMessageCount() > 3)
                 oscSender.sendBundle(oscCoralBundle);
@@ -341,7 +352,13 @@ void ofApp::draw(){
             ofDrawCircle(trackRectCenters[i].x + 220, trackRectCenters[i].y + shiftY, 1);
         }
     }
+    
+    ofPushMatrix();
+    detect.draw();
+    ofPopMatrix();
+
 }
+
 
 //--------------------------------------------------------------
 void ofApp::exit(){
@@ -349,6 +366,7 @@ void ofApp::exit(){
 }
 
 //--------------------------------------------------------------
+
 void ofApp::ringButtonPressed(){
     
     //kinect.open(deviceList[0].serial);
@@ -364,6 +382,26 @@ void ofApp::keyPressed(int key){
             showMenu = !showMenu;
             break;
     }
+    
+    detect.keyPressed(key);
+    if(key == 'a'){
+        if(detect.b_OscActive){
+            detect.sendOSC(false);
+        }else{
+            detect.sendOSC(true);
+        }
+    }
+    if(key == 'r') detect.rotateDetectOn(true);
+    if(key == ' ') detect.sendOSC(true);
+    if(key == 'b') detect.toggleImage();
+    if(key == 'g') detect.bHideGui = !detect.bHideGui;
+    if(key == 'c') detect.b_Contrast = !detect.b_Contrast;
+    
+    if(key == 's') detect.saveParam();
+    if(key == 'l') detect.loadParam();
+    //if(key == 'c') perspective.toggleImage();
+    if(key == 'f') ofToggleFullscreen();
+
 }
 
 //--------------------------------------------------------------

@@ -5,11 +5,12 @@
 #include "ofxGui.h"
 #include "ofxOpenCv.h"
 #include "ofxOsc.h"
+#include "ofDetection.h"
 #include "ofxOscBundle.h"
 
 
-#define SERVER_PORT          8888
-#define SERVER_IP_ADDR       "192.168.179.3"
+#define SERVER_PORT          7000
+#define SERVER_IP_ADDR       "172.16.65.62"
 
 #define CORAL_START_ADDRESS  "/coral/start"
 #define CORAL_END_ADDRESS    "/coral/end"
@@ -39,8 +40,6 @@ class ofApp : public ofBaseApp{
 		void setup();
 		void update();
 		void draw();
-    
-        void exit();
 
 		void keyPressed(int key);
 		void keyReleased(int key);
@@ -53,8 +52,10 @@ class ofApp : public ofBaseApp{
 		void gotMessage(ofMessage msg);
         bool isInColorCircle(int x, int y);
         bool isValidDepthRange(int index);
-    
+
+        void exit();
         void ringButtonPressed();
+
     
         ofxPanel gui;
         ofxButton ringButton;
@@ -74,7 +75,9 @@ class ofApp : public ofBaseApp{
         ofTexture texDepth;
         ofTexture texRGB;
     
-        ofxLabel coralCount;
+        ofDetection detect;
+    
+    ofxLabel coralCount;
     
     ofxLabel coralValue1;
     ofxLabel coralValue2;
@@ -101,5 +104,5 @@ class ofApp : public ofBaseApp{
     ofxLabel message2;
     ofxLabel message3;
     
-        ofSoundPlayer ring;
+    ofSoundPlayer ring;
 };
